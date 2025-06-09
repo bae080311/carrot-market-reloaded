@@ -5,3 +5,9 @@
     @apply text-orange-500;
   }
 }
+
+@layer components {
+  .primary-btn {
+    @apply bg-orange-500 hover:bg-orange-400 font-medium w-full transition text-lg text-white text-center rounded-md;
+  }
+}
