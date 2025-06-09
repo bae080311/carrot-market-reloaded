@@ -8,6 +8,6 @@
 
 @layer components {
   .primary-btn {
-    @apply bg-orange-500 hover:bg-orange-400 font-medium w-full transition text-lg text-white text-center rounded-md;
+    @apply bg-orange-500 hover:bg-orange-400 font-medium w-full transition text-white text-center rounded-md;
   }
 }
