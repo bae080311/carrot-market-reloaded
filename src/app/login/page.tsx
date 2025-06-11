@@ -28,7 +28,7 @@ export default function LogIn() {
           required
           error={[]}
         />
-        <FormBtn text="Log in with email and password." loading={false} />
+        <FormBtn text="Log in with email and password." />
       </form>
       <SocialLogin />
     </div>
