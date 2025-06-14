@@ -2,6 +2,10 @@
 
 import { z } from "zod";
 
+const passwordRegex = new RegExp(
+  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).+$/
+);
+
 function checkUsername(username: string): boolean {
   return !username.includes("potato");
 }
@@ -25,9 +29,18 @@ const formSchema = z
       })
       .min(5, "너무 짧아")
       .max(10, "너무 길어")
+      .trim()
+      .toLowerCase()
+      .transform((username) => `🔥 ${username} 🔥`)
       .refine(checkUsername, "custom error"),
-    email: z.string().email(),
-    password: z.string().min(10),
+    email: z.string().email().toLowerCase(),
+    password: z
+      .string()
+      .min(10)
+      .regex(
+        passwordRegex,
+        "비밀번호는 소문자, 대문자, 숫자, 특수문자를 포함해야 합니다"
+      ),
     confirmPassword: z.string().min(10),
   })
   .refine(checkPassword, {
