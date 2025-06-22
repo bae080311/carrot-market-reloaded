@@ -1,61 +1,97 @@
 "use server";
 
 import {
-  PASSWORD_ERROR_MESSAGE,
   PASSWORD_MIN_LENGTH,
   PASSWORD_REGEX,
+  PASSWORD_ERROR_MESSAGE,
 } from "@/lib/constants";
+import db from "@/lib/db";
 import { z } from "zod";
 
-function checkUsername(username: string): boolean {
-  return !username.includes("potato");
-}
+const checkUsername = (username: string) => !username.includes("potato");
 
-function checkPassword({
+const checkPasswords = ({
   password,
-  confirmPassword,
+  confirm_password,
 }: {
   password: string;
-  confirmPassword: string;
-}): boolean {
-  return password === confirmPassword;
-}
+  confirm_password: string;
+}) => password === confirm_password;
+
+const checkUniqueUsername = async (username: string) => {
+  const user = await db.user.findUnique({
+    where: {
+      username,
+    },
+    select: {
+      id: true,
+    },
+  });
+  // if (user) {
+  //   return false;
+  // } else {
+  //   return true;
+  // }
+  return !Boolean(user);
+};
+
+const checkUniqueEmail = async (email: string) => {
+  const user = await db.user.findUnique({
+    where: {
+      email,
+    },
+    select: {
+      id: true,
+    },
+  });
+  return Boolean(user) === false;
+};
 
 const formSchema = z
   .object({
     username: z
       .string({
-        required_error: "사용자 이름은 필수입니다",
-        invalid_type_error: "사용자 이름은 문자열이어야 합니다",
+        invalid_type_error: "Username must be a string!",
+        required_error: "Where is my username???",
       })
-      .min(5, "너무 짧아")
-      .max(10, "너무 길어")
-      .trim()
       .toLowerCase()
-      .transform((username) => `🔥 ${username} 🔥`)
-      .refine(checkUsername, "custom error"),
-    email: z.string().email().toLowerCase(),
+      .trim()
+      // .transform((username) => `🔥 ${username} 🔥`)
+      .refine(checkUsername, "No potatoes allowed!")
+      .refine(checkUniqueUsername, "This username is already taken"),
+    email: z
+      .string()
+      .email()
+      .toLowerCase()
+      .refine(
+        checkUniqueEmail,
+        "There is an account already registered with that email."
+      ),
     password: z
-      .string({
-        required_error: "비밀번호를 입력해주세요",
-        invalid_type_error: "비밀번호 형식과 맞지 않습니다",
-      })
+      .string()
       .min(PASSWORD_MIN_LENGTH)
       .regex(PASSWORD_REGEX, PASSWORD_ERROR_MESSAGE),
-    confirmPassword: z.string().min(10),
+    confirm_password: z.string().min(PASSWORD_MIN_LENGTH),
   })
-  .refine(checkPassword, {
-    message: "비밀번호와 비밀번호 확인이 다릅니다",
-    path: ["confirmPassword"],
+  .refine(checkPasswords, {
+    message: "Both passwords should be the same!",
+    path: ["confirm_password"],
   });
 
-export async function createAccount(prevState: any, formdata: FormData) {
+export async function createAccount(prevState: any, formData: FormData) {
   const data = {
-    username: formdata.get("username"),
-    email: formdata.get("email"),
-    password: formdata.get("password"),
-    confirmPassword: formdata.get("confirmPassword"),
+    username: formData.get("username"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    confirm_password: formData.get("confirm_password"),
   };
-  const result = formSchema.safeParse(data);
-  if (!result.success) return result.error.flatten();
+  const result = await formSchema.safeParseAsync(data);
+  if (!result.success) {
+    return result.error.flatten();
+  } else {
+    // hash password
+    // save the user to db
+    // log the user in
+    // redirect "/home"
+  }
 }
